@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VIERCYS Hotels & Resorts
 
-## Getting Started
+A working fictional Santorini reservation application: Next.js 16.4 App Router, React 19, TypeScript, Tailwind CSS, GSAP ScrollTrigger, React Three Fiber, persistent SQLite, React Email rendering and optional Resend/OpenAI integrations. No actual accommodation, transport, activities or money is booked.
 
-First, run the development server:
+## Launch locally in PowerShell
 
-```bash
+Use Node.js **22.18 or newer**; this backend uses `node:sqlite`. Dependencies are already installed in this workspace.
+
+```powershell
+cd "C:\Users\Kenjo Condez\Downloads\viercys-hotel"
+npm install
+npm run seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open **http://localhost:3000**. The seed is idempotent and also runs automatically on first database access. Stop your server with **Ctrl+C**. If Next reports that this repository already has a development server, use its printed URL; do not launch a second one. To load these changes, stop the existing server in its terminal and run `npm run dev` again. Do not delete its lock while it is running.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The default authoritative database is `data/viercys.sqlite`, preserved across reloads and server restarts. It contains exactly 20 physical rooms: 101–110 Essential, 201–206 Signature, 301–304 Grand. Prices are sample EUR amounts, stored as integer cents; capacities are 2, 3 and 4 respectively. The local demo has no card fields and never charges money.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Staff access
 
-## Learn More
+Open **/admin**. The seed generates a random manager password into the private, gitignored **data/demo-staff.json**. Read that file locally; do not publish it. If `VIERCYS_ADMIN_PASSWORD` is configured, use username `manager` and that password instead. It must have at least 12 characters. Staff sessions are separate from guest sessions; access and manager-only actions are checked on the server.
 
-To learn more about Next.js, take a look at the following resources:
+## Demonstrate the complete journey
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Open the homepage and use Book your stay or the near-fold reservation form. Choose Santorini, three nights and two adults.
+2. Compare categories; select a Signature Suite. Select multiple rooms when your party requires them.
+3. Add optional breakfast and a romantic dinner request. Requested dinner, sailing and spa are excluded from the charged demo total and visibly await approval.
+4. Enter guest details, accept the displayed policy and confirm the **simulated payment**. The reservation is committed before its reference appears.
+5. Open My Stay, the email preview, printable receipt and editable Your Journey itinerary. Changes show a new quote before explicit confirmation; cancellations require explicit confirmation and observe the two-day cutoff.
+6. Sign into /admin in another browser/session to see the same booking immediately. Inspect inventory, calendar, guests and reports; exercise check-in/out and housekeeping.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The booking browser receives access to its own reservation. To access all stays with an email, use /lookup. Without delivery credentials, the demo shows a clearly labeled verification shortcut. It does **not** prove mailbox ownership. Outside demo mode, that shortcut is disabled. A confirmation/preview Manage Booking token is scoped to that reservation; it cannot unlock other guests' bookings.
 
-## Deploy on Vercel
+## Configuration
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Copy `.env.example` to `.env.local`, fill only the services you use and restart Next. `npm run seed` also reads `.env.local`. Never commit credentials.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `VIERCYS_DB_PATH`: persistent SQLite path; default data/viercys.sqlite. Use an absolute path on a persistent disk when deploying.
+- `VIERCYS_DEMO_MODE`: development enables the labeled demo automatically. Production requires explicit `true` for demo lookup shortcuts/generated staff access/digital check-in.
+- `VIERCYS_ADMIN_PASSWORD`: configured manager password, at least 12 characters; no shipped default.
+- `NEXT_PUBLIC_DEMO_CURRENCY`: default EUR. Rebuild after changing this public setting. Amounts remain sample prices; this is not exchange-rate conversion.
+- `APP_URL`: the URL guests can reach, used in email images and secure links. A localhost URL is unsuitable for external recipients.
+- `RESEND_API_KEY` and `RESEND_FROM`: enable real server-side email submission. Verify your sender/domain with Resend. `RESEND_TEST_RECIPIENT` optionally redirects test emails; that recipient receives private access links, so use only a mailbox you control and clear the override for normal recipient delivery.
+- `RESEND_WEBHOOK_SECRET`: configure a Resend webhook to POST to `/api/email-webhook`. Signed sent/delivered/bounced/failed/delayed events update stored statuses. Duplicate event IDs are ignored. The installed Svix verifier authenticates the raw body before JSON parsing.
+- `OPENAI_API_KEY` and optional `OPENAI_MODEL`: enable structured AI suggestions. Missing keys, timeouts, refusal, invalid responses or provider errors fall back to saved deterministic suggestions. Guest inputs are treated as data. Responses do not modify bookings or charge money.
+
+Emails use React Email's renderer with escaped, inline-styled table content and system fonts. Confirmation, modification, cancellation and manager-triggered reminder templates share the brand layout. No key/sender means **demo-preview**, never sent. A successful provider response means **accepted**, not delivered. Retry is explicit in My Stay; provider idempotency keys and stored HTML are reused. There is no unattended background retry/reminder scheduler in this build.
+
+## Routes
+
+| Route | Working behavior |
+| --- | --- |
+| / | Photographic hero, immediate booking form, actual scroll-controlled arch geometry, architectural narrative, suite preview, destination gallery |
+| /destinations; /destinations/boracay; /destinations/amalfi; /destinations/bali | Honest future previews; no pretend inventory or waitlist submission |
+| /santorini | Property, category capacities/rates, policies and booking entry |
+| /availability | Per-date physical inventory, optional finder, filters, sort, selection and price summary |
+| /rooms/essential; /rooms/signature; /rooms/grand; /compare | Editorial galleries, room details and comparison of up to three categories |
+| /checkout | Optional extras, validated guest details, consent and explicit demo confirmation |
+| /booking/[reference] | Protected confirmation/detail, room/date/guest modification with quote, cancellation, email status, optional demo check-in |
+| /booking/[reference]/receipt; /booking/[reference]/email-preview | Print/save PDF and protected branded email preview |
+| /my-stay; /lookup; /profile | Reservation history, expiring single-use access, verified guest profile |
+| /itinerary/[reference]; /concierge | Saved editable daily suggestions and optional AI guidance |
+| /admin | Protected roles, reservations/guests/inventory/calendar/reports and operational controls |
+
+My VIERCYS has a web app manifest and install icons. Installation support varies by browser. This is an **online-only** companion: private booking data is not cached offline.
+
+## Verification
+
+```powershell
+npm run lint
+npm run typecheck
+npm run test:unit
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
+
+Playwright runs a production server at **3100**, with a fresh isolated database; it does not stop or reuse your dev server. Build first after source changes. Unit tests use temporary databases and mocked external providers. `PROJECT_STATUS.md` records the latest actual results and feature limitations.
+
+Production preview of this fictional demo:
+
+```powershell
+$env:VIERCYS_DEMO_MODE="true"
+npm run build
+npm run start
+```
+
+SQLite deployment requires a single Node host and persistent writable disk, not a stateless/serverless filesystem. The supported backend is SQLite; Supabase credentials alone do not switch it. See `docs/BACKEND.md` for deployment boundaries and the explicit Postgres migration path. Node 22 may print an experimental SQLite warning. The current audit has five high findings in development lint tooling; no incompatible automatic downgrade was applied.
+
+## Photography and cinematic behavior
+
+All images are temporary stock/editorial inspiration, not actual VIERCYS property or category photographs. Replace them with coherent approved room/architecture imagery before presenting this as a real property. Full motion/fallback/asset details are in `docs/CINEMATIC.md`. Mobile, coarse pointer and reduced-motion modes retain normal vertical flow without loading the 3D scene. The homepage booking form also renders without JavaScript; completing a booking requires JavaScript.
+
+| Local file | Original source |
+| --- | --- |
+| public/images/santorini.jpg | https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e |
+| public/images/architecture.jpg | https://images.unsplash.com/photo-1533105079780-92b9be482077 |
+| public/images/suite.jpg | https://images.unsplash.com/photo-1600210492486-724fe5c67fb0 |
+| public/images/boracay.jpg | Laurentiu Morariu: https://unsplash.com/photos/NR-2_RIb62k |
+| public/images/amalfi.jpg | Sylvain Perona: https://unsplash.com/photos/N32Di3LG-t0 |
+| public/images/bali.jpg | https://images.unsplash.com/photo-1537996194471-e657df975ab4 |
+
+Review the Unsplash license (https://unsplash.com/license) and replacement rights. The pre-existing Microsoft.Services.Store.winmd is preserved.

@@ -1,0 +1,266 @@
+.journey {
+  --journey: 0;
+  position: relative;
+  background: #f3eee5;
+  isolation: isolate;
+}
+.stage {
+  position: relative;
+  height: 100svh;
+  min-height: 700px;
+  overflow: hidden;
+}
+.courtyard,
+.suitePhoto,
+.photoShade,
+.canvas {
+  position: absolute;
+  inset: 0;
+}
+.courtyard img,
+.suitePhoto img {
+  object-fit: cover;
+}
+.courtyard {
+  transform-origin: 50% 60%;
+}
+.photoShade {
+  background: linear-gradient(
+    180deg,
+    rgba(12, 33, 38, 0.04),
+    rgba(12, 33, 38, 0.36)
+  );
+  z-index: 1;
+}
+.canvas {
+  z-index: 2;
+  pointer-events: none;
+}
+.portalFallback {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: #e7dece;
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% 100%,
+    72% 100%,
+    72% 42%,
+    70% 28%,
+    65% 18%,
+    57% 12%,
+    50% 10%,
+    43% 12%,
+    35% 18%,
+    30% 28%,
+    28% 42%,
+    28% 100%,
+    0 100%
+  );
+  transform: scale(calc(1 + var(--journey) * 5));
+  transform-origin: 50% 58%;
+  pointer-events: none;
+}
+.journey[data-render-mode="3d"] .portalFallback {
+  display: none;
+}
+.openingCopy,
+.seaCopy,
+.suiteCopy {
+  position: absolute;
+  z-index: 4;
+  left: 7%;
+  max-width: 620px;
+  top: 9%;
+  color: #233f4b;
+}
+.openingCopy h2,
+.seaCopy h2,
+.suiteCopy h2 {
+  font-family: Georgia, serif;
+  font-size: clamp(42px, 5vw, 80px);
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+  margin: 18px 0 24px;
+}
+.openingCopy > p:last-child,
+.seaCopy > p:last-child,
+.suiteCopy > p {
+  font-size: 16px;
+  line-height: 1.7;
+  max-width: 410px;
+}
+.kicker {
+  font-size: 13px !important;
+  letter-spacing: 0.11em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+.seaCopy {
+  opacity: 0;
+  top: auto;
+  bottom: 15%;
+  color: #fff;
+  text-shadow: 0 2px 18px #102c3b;
+}
+.suitePhoto {
+  z-index: 3;
+  opacity: 0;
+}
+.suitePhoto:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(243, 238, 229, 0.96),
+    rgba(243, 238, 229, 0.8) 40%,
+    rgba(243, 238, 229, 0) 75%
+  );
+}
+.suiteCopy {
+  opacity: 0;
+  top: 23%;
+}
+.action {
+  display: inline-flex;
+  margin-top: 28px;
+  gap: 30px;
+  align-items: center;
+  padding: 18px 24px;
+  background: #233f4b;
+  color: #f3eee5;
+  font-size: 16px;
+}
+.action:focus-visible,
+.skip:focus-visible {
+  outline: 3px solid #c6ad85;
+  outline-offset: 5px;
+}
+.progressLabel {
+  position: absolute;
+  bottom: 32px;
+  left: 7%;
+  right: 7%;
+  z-index: 4;
+  display: flex;
+  gap: 30px;
+  font-size: 13px;
+  color: #fff;
+  text-shadow: 0 1px 8px #233f4b;
+}
+.progressLabel:before {
+  position: absolute;
+  content: "";
+  height: 2px;
+  bottom: -12px;
+  background: #f3eee5;
+  width: calc(var(--journey) * 100%);
+}
+.skip {
+  position: absolute;
+  right: 7%;
+  top: 115px;
+  z-index: 5;
+  padding: 13px 18px;
+  background: #f3eee5;
+  color: #233f4b;
+  font-size: 14px;
+}
+.journey[data-render-mode="2d"] .openingCopy {
+  background: rgba(243, 238, 229, 0.94);
+  padding: 26px;
+  max-width: 530px;
+}
+.journey[data-render-mode="3d"] .openingCopy {
+  max-width: 460px;
+}
+.journey[data-render-mode="3d"] .openingCopy h2 {
+  font-size: clamp(42px, 4.5vw, 70px);
+}
+@media (max-width: 899px), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .stage {
+    height: auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+  }
+  .courtyard {
+    position: relative;
+    height: 70svh;
+    min-height: 440px;
+    order: 1;
+    clip-path: ellipse(95% 95% at 50% 100%);
+    margin-top: 210px;
+  }
+  .openingCopy {
+    top: 25px !important;
+    left: 6%;
+    right: 6%;
+    max-width: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+  .openingCopy h2 {
+    font-size: 45px;
+    line-height: 1.1;
+    margin: 15px 0;
+  }
+  .openingCopy > p:last-child {
+    max-width: 310px;
+    font-size: 15px;
+  }
+  .portalFallback,
+  .photoShade,
+  .canvas,
+  .progressLabel,
+  .skip {
+    display: none;
+  }
+  .seaCopy {
+    position: relative;
+    order: 2;
+    opacity: 1;
+    left: auto;
+    bottom: auto;
+    padding: 45px 6%;
+    color: #233f4b;
+    text-shadow: none;
+  }
+  .seaCopy h2 {
+    font-size: 44px;
+  }
+  .suitePhoto {
+    position: relative;
+    order: 3;
+    opacity: 1;
+    height: 460px;
+  }
+  .suitePhoto:after {
+    display: none;
+  }
+  .suiteCopy {
+    position: relative;
+    order: 4;
+    opacity: 1;
+    left: auto;
+    top: auto;
+    padding: 40px 6% 65px;
+  }
+  .suiteCopy h2 {
+    font-size: 44px;
+  }
+  .suiteCopy > p {
+    max-width: 530px;
+  }
+  .action {
+    width: max-content;
+    max-width: 100%;
+    font-size: 15px;
+  }
+  .journey {
+    padding-top: 15px;
+  }
+}
